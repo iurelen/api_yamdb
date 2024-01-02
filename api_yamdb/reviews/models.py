@@ -60,7 +60,7 @@ class Title(AddNameStrMixin):
     description = models.TextField(
         blank=True
     )
-    categories = models.ForeignKey(
+    category = models.ForeignKey(
         Category,
         on_delete=models.DO_NOTHING
     )
