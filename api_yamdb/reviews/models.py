@@ -57,13 +57,16 @@ class Genre(AddNameStrSlugMixin):
 
 class Title(AddNameStrMixin):
     year = models.PositiveIntegerField()
-    description = models.TextField()
+    description = models.TextField(
+        blank=True
+    )
     categories = models.ForeignKey(
         Category,
         on_delete=models.DO_NOTHING
     )
     genre = models.ManyToManyField(
         Genre,
+        through='GenreTitle'
     )
     rating = models.IntegerField(
         default=0
@@ -76,14 +79,29 @@ class Title(AddNameStrMixin):
 class Review(DefaultFieldMixin):
     score = models.PositiveIntegerField(
         default=0,
-
     )
-
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE
+    )
     class Meta:
         verbose_name = 'review'
 
 
 class Comment(DefaultFieldMixin):
-
+    review = models.ForeignKey(
+        Review,
+        on_delete=models.CASCADE,
+    )
     class Meta:
         verbose_name = 'comments'
+
+class GenreTitle(models.Model):
+    genre = models.ForeignKey(
+        Genre,
+        on_delete=models.CASCADE
+    )
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE
+    )
