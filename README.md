@@ -37,6 +37,15 @@
 Для запуска проекта выполните следующие шаги:
 
 ```bash
+# Создайте виртуальное окружение
+python -m venv venv
+
+# Активируйте виртуальное окружение
+ # - linux
+source /venv/bin/activate 
+ # - windows
+venv\Script\activate
+
 # Установите зависимости
 pip install -r requirements.txt
 
