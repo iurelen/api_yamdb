@@ -33,31 +33,34 @@ class DefaultFieldMixin(models.Model):
     class Meta:
         abstract = True
 
-class Categories(AddNameStrMixin, SlugMixin):
+class Category(AddNameStrMixin, SlugMixin):
     class Meta:
         verbose_name = 'category'
 
 
 
-class Genres(AddNameStrMixin, SlugMixin):
+class Genre(AddNameStrMixin, SlugMixin):
 
     class Meta:
         verbose_name = 'genre'
-class Titles(AddNameStrMixin):
+class Title(AddNameStrMixin):
     year = models.PositiveIntegerField()
     description = models.TextField()
     categories = models.ForeignKey(
-        Categories,
+        Category,
         on_delete=models.DO_NOTHING
     )
     genre = models.ManyToManyField(
-        Genres,
+        Genre,
+    )
+    rating = models.IntegerField(
+        default=0
     )
 
     class Meta:
         verbose_name = 'title'
 
-class Reviews(DefaultFieldMixin):
+class Review(DefaultFieldMixin):
     score = models.PositiveIntegerField(
         default=0,
 
@@ -66,7 +69,7 @@ class Reviews(DefaultFieldMixin):
     class Meta:
         verbose_name = 'review'
 
-class Comments(DefaultFieldMixin):
+class Comment(DefaultFieldMixin):
 
     class Meta:
         verbose_name = 'comments'
