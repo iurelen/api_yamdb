@@ -13,11 +13,14 @@ class AddNameStrMixin(models.Model):
         abstract = True
 
 
-class SlugMixin:
+class AddNameStrSlugMixin(AddNameStrMixin):
     slug = models.CharField(
         max_length=64,
         unique=True
     )
+
+    class Meta:
+        abstract = True
 
 
 class DefaultFieldMixin(models.Model):
@@ -33,13 +36,13 @@ class DefaultFieldMixin(models.Model):
     class Meta:
         abstract = True
 
-class Category(AddNameStrMixin, SlugMixin):
+class Category(AddNameStrSlugMixin):
     class Meta:
         verbose_name = 'category'
 
 
 
-class Genre(AddNameStrMixin, SlugMixin):
+class Genre(AddNameStrSlugMixin):
 
     class Meta:
         verbose_name = 'genre'
