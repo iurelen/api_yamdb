@@ -1,21 +1,35 @@
-from rest_framework import viewsets, status
-from rest_framework.permissions import IsAdminUser
+from rest_framework import viewsets, status, filters, mixins
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet
 
 from reviews.models import Category, Comment, Genre, Review, Title
 
-from .permissions import CustomPermissions, TestPermissions
+from .permissions import (CustomPermissions,
+                          AdminSuperuserChangeOrAnyReadOnly)
 from .serializers import (CategorySerializer,
                           CommentSerializer,
                           GenreSerializer,
                           ReviewSerializer,
                           TitleSerializer)
 
+class GenreAndCategoryModelViewSet(mixins.CreateModelMixin,
+                            mixins.DestroyModelMixin,
+                            mixins.ListModelMixin,
+                            GenericViewSet,):
+    """
+    A viewset that provides default `create()`, `destroy()` and `list()` actions.
+    Adding `lookup_field` for slug fild, searh for name field and permissions.
+    """
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('=name',)
+    lookup_field = 'slug'
+    permission_classes = (AdminSuperuserChangeOrAnyReadOnly,)
 
-class CategoryViewSet(viewsets.ModelViewSet):
-    queryset = Category.objects.all()
+
+class CategoryViewSet(GenreAndCategoryModelViewSet):
+    queryset = Category.objects.all().order_by('name')
     serializer_class = CategorySerializer
-    permission_classes = (CustomPermissions, )
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -24,10 +38,10 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = (CustomPermissions,)
 
 
-class GenreViewSet(viewsets.ModelViewSet):
-    queryset = Genre.objects.all()
+class GenreViewSet(GenreAndCategoryModelViewSet):
+    queryset = Genre.objects.all().order_by('name')
     serializer_class = GenreSerializer
-    permission_classes = (CustomPermissions,)
+
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -56,6 +70,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
+    queryset = Title.objects.all().order_by('name')
     serializer_class = TitleSerializer
-    permission_classes = (CustomPermissions,)
+    permission_classes = (AdminSuperuserChangeOrAnyReadOnly,)
+    # permission_classes = (AllowAny,)
+
+    def update(self, request, *args, **kwargs):
+        if not kwargs.get('partial', False):
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)

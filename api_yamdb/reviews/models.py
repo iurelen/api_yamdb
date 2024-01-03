@@ -27,6 +27,9 @@ class AddNameStrSlugMixin(AddNameStrMixin):
     class Meta:
         abstract = True
 
+    def __str__(self):
+        return f'{self.slug}'
+
 
 class DefaultFieldMixin(models.Model):
     """Added fields test,author, pub_date."""
@@ -63,7 +66,8 @@ class Title(AddNameStrMixin):
     )
     category = models.ForeignKey(
         Category,
-        on_delete=models.DO_NOTHING
+        on_delete=models.SET_NULL,
+        null=True
     )
     genre = models.ManyToManyField(
         Genre,
