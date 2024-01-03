@@ -10,7 +10,7 @@ urlpatterns = [
         TemplateView.as_view(template_name='redoc.html'),
         name='redoc'
     ),
-    path('api/v1/', include('users.urls')) # Перенести версификацию в приложение users
+    path('api/v1/', include('users.urls')), # Перенести версификацию в приложение users
     path('api/', include('api.urls')),
 
 ]
