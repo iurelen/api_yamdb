@@ -8,16 +8,19 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
 User = get_user_model()
+
+
 class Command(BaseCommand):
     help = "Import data from CSV file"
 
     def handle(self, *args, **kwargs):
         csv_files_path = os.path.normpath(kwargs['csv_files_path'])
         csv_files = self._get_csv_files(csv_files_path)
-
+        db_path = settings.DATABASES['default']['NAME']
+        user_model_name = User._meta.model_name
         for name, path in csv_files:
             with open(path, 'r', encoding='utf-8') as csv_file:
-                if 'users' in name:
+                if f'users_{user_model_name}' == name:
                     csv_reader = csv.DictReader(csv_file)
                     for row in csv_reader:
                         try:
@@ -26,7 +29,7 @@ class Command(BaseCommand):
                             sys.stdout.write(f'{ex}! \n {row}\n')
                             continue
                 else:
-                    conn = sqlite3.connect(settings.DATABASES['default']['NAME'])
+                    conn = sqlite3.connect(db_path)
                     cursor = conn.cursor()
                     csv_reader = csv.reader(csv_file)
                     columns = tuple(next(csv_reader, None))
@@ -36,7 +39,9 @@ class Command(BaseCommand):
                         try:
                             cursor.execute(query, row)
                         except sqlite3.Error as ex:
-                            sys.stdout.write(f'{ex}! \n query: {query}, {row}\n')
+                            sys.stdout.write(
+                                f'{ex}! \n query: {query}, {row}\n'
+                            )
                             continue
                     conn.commit()
                     conn.close()
