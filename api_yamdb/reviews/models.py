@@ -20,7 +20,7 @@ class AddNameStrSlugMixin(AddNameStrMixin):
     """Added field slug."""
 
     slug = models.CharField(
-        max_length=64,
+        max_length=50,
         unique=True
     )
 
@@ -36,8 +36,8 @@ class DefaultFieldMixin(models.Model):
         User,
         on_delete=models.CASCADE
     )
-    pub_date = models.TimeField(
-        auto_created=True,
+    pub_date = models.DateTimeField(
+        auto_now_add=True,
     )
 
     class Meta:
@@ -58,7 +58,8 @@ class Genre(AddNameStrSlugMixin):
 class Title(AddNameStrMixin):
     year = models.PositiveIntegerField()
     description = models.TextField(
-        blank=True
+        blank=True,
+        null=True,
     )
     category = models.ForeignKey(
         Category,
@@ -69,7 +70,8 @@ class Title(AddNameStrMixin):
         through='GenreTitle'
     )
     rating = models.IntegerField(
-        default=0
+        default=0,
+        null=True
     )
 
     class Meta:
@@ -84,6 +86,7 @@ class Review(DefaultFieldMixin):
         Title,
         on_delete=models.CASCADE
     )
+
     class Meta:
         verbose_name = 'review'
 
@@ -93,8 +96,10 @@ class Comment(DefaultFieldMixin):
         Review,
         on_delete=models.CASCADE,
     )
+
     class Meta:
         verbose_name = 'comments'
+
 
 class GenreTitle(models.Model):
     genre = models.ForeignKey(

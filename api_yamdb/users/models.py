@@ -13,6 +13,7 @@ class CustomUser(AbstractUser):
     role = models.CharField(
         max_length=32,
         choices=ROLE_CHOICE,
+        default='user'
     )
     bio = models.TextField(
         blank=True,

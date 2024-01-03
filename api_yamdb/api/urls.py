@@ -18,5 +18,5 @@ router_v1.register('titles', TitleViewSet)
 
 urlpatterns = [
     path('v1/', include(router_v1.urls)),
-    path('v1/titles/<int:post_id>/', include(router_v1.urls)),
+    path('v1/titles/<int:title_id>/', include(router_v1.urls)),
 ]

@@ -20,11 +20,18 @@ class GenreSerializer(serializers.ModelSerializer):
         fields = ('name', 'slug')
         model = Genre
 
+    def validate_slug(self, value):
+        if not value.isidentifier():
+            return serializers.ValidationError()
+        return value
+
 
 class ReviewSerializer(serializers.ModelSerializer):
+    author = serializers.StringRelatedField(),
     class Meta:
-        fields = ('id', 'text', 'author', 'score', 'pub_date')
+        fields = '__all__'
         model = Review
+        read_only_fields = ('id', 'author', 'pub_date', 'title')
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -32,6 +39,7 @@ class TitleSerializer(serializers.ModelSerializer):
         queryset=Category.objects.all(),
         slug_field='slug'
     )
+
     class Meta:
         fields = (
             'id',
