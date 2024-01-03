@@ -1,33 +1,45 @@
 import csv
 import os
-import re
 import sqlite3
+import sys
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
-
+User = get_user_model()
 class Command(BaseCommand):
     help = "Import data from CSV file"
 
     def handle(self, *args, **kwargs):
         csv_files_path = os.path.normpath(kwargs['csv_files_path'])
         csv_files = self._get_csv_files(csv_files_path)
-        conn = sqlite3.connect(settings.DATABASES['default']['NAME'])
-        cursor = conn.cursor()
+
         for name, path in csv_files:
             with open(path, 'r', encoding='utf-8') as csv_file:
-                csv_reader = csv.reader(csv_file)
-                columns = tuple(next(csv_reader, None))
-                for row in csv_reader:
-                    query = f"INSERT INTO {name} ({', '.join(columns)}) VALUES ({', '.join(['?'] * len(columns))})"
-                    try:
-                        cursor.execute(query, row)
-                    except sqlite3.IntegrityError:
-                        continue
-        conn.commit()
-        conn.close()
-
+                if 'users' in name:
+                    csv_reader = csv.DictReader(csv_file)
+                    for row in csv_reader:
+                        try:
+                            User.objects.create(**row)
+                        except Exception as ex:
+                            sys.stdout.write(f'{ex}! \n {row}\n')
+                            continue
+                else:
+                    conn = sqlite3.connect(settings.DATABASES['default']['NAME'])
+                    cursor = conn.cursor()
+                    csv_reader = csv.reader(csv_file)
+                    columns = tuple(next(csv_reader, None))
+                    for row in csv_reader:
+                        query = f"INSERT INTO {name} ({', '.join(columns)}) " \
+                                f"VALUES ({', '.join(['?'] * len(columns))})"
+                        try:
+                            cursor.execute(query, row)
+                        except sqlite3.Error as ex:
+                            sys.stdout.write(f'{ex}! \n query: {query}, {row}\n')
+                            continue
+                    conn.commit()
+                    conn.close()
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -37,7 +49,7 @@ class Command(BaseCommand):
         )
 
     def _get_csv_files(self, csv_files_path):
-        files_list =[]
+        files_list = []
         path = os.path.join(settings.BASE_DIR, csv_files_path)
         for file in os.listdir(path):
             file_name = file.split('.')[0]
