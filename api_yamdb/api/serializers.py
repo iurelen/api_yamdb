@@ -1,10 +1,21 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from reviews.models import Category, Comment, Genre, Review, Title
 
+User = get_user_model()
+
+
+class TitleSerializerMetaMixin:
+
+    class Meta:
+        fields = '__all__'
+        model = Title
+        read_only_fields = ('rating',)
+
 
 class ValidateSlugMixin:
-    """Slug valudation mixin."""
+    """Slug validation mixin."""
 
     def validate_slug(self, value):
         if not value.isidentifier():
@@ -33,7 +44,10 @@ class GenreSerializer(serializers.ModelSerializer,
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    author = serializers.StringRelatedField(),
+    author = serializers.StringRelatedField()
+    score = serializers.IntegerField(
+        required=False
+    )
 
     class Meta:
         fields = '__all__'
@@ -41,8 +55,9 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'author', 'pub_date', 'title')
 
 
-class TitlePostSerializer(serializers.ModelSerializer):
-    """TitleSerialiaer for NO Safe methods."""
+class TitlePostSerializer(serializers.ModelSerializer,
+                          TitleSerializerMetaMixin):
+    """TitleSerializer for NO Safe methods."""
 
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(),
@@ -53,19 +68,6 @@ class TitlePostSerializer(serializers.ModelSerializer):
         queryset=Category.objects.all(),
         slug_field='slug'
     )
-    rating = serializers.IntegerField(
-        default=None
-    )
-
-    class Meta:
-        fields = ('id',
-                  'name',
-                  'year',
-                  'rating',
-                  'description',
-                  'genre',
-                  'category')
-        model = Title
 
     def validate_name(self, value):
         if len(value) > 256:
@@ -75,20 +77,12 @@ class TitlePostSerializer(serializers.ModelSerializer):
         return value
 
 
-class TitleGetSerializer(serializers.ModelSerializer):
-    """TitleSerialiaer for Safe methods."""
+class TitleGetSerializer(serializers.ModelSerializer,
+                         TitleSerializerMetaMixin):
+    """TitleSerializer for Safe methods."""
 
     category = CategorySerializer()
     genre = GenreSerializer(
         many=True
     )
-
-    class Meta:
-        fields = ('id',
-                  'name',
-                  'year',
-                  'rating',
-                  'description',
-                  'genre',
-                  'category')
-        model = Title
+    rating = serializers.IntegerField()

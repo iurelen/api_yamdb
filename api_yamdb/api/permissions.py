@@ -14,7 +14,12 @@ class AdminSuperuserChangeOrAnyReadOnly(BasePermission):
 
 
 class OwnerModeratorChange(BasePermission):
+    def has_permission(self, request, view):
+        return bool(request.user.is_authenticated or
+                    request.method in SAFE_METHODS)
+
     def has_object_permission(self, request, view, obj):
         role = getattr(request.user, 'role', 'anon')
-        return (request.user == obj.author
-                or role == 'moderator')
+        return bool(request.user == obj.author
+                    or role == 'moderator'
+                    or request.method in SAFE_METHODS)

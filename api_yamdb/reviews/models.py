@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.db.models import UniqueConstraint, Avg
 
 User = get_user_model()
 
@@ -58,6 +59,24 @@ class Genre(AddNameStrSlugMixin):
         verbose_name = 'genre'
 
 
+class Review(DefaultFieldMixin):
+    score = models.PositiveIntegerField(
+        default=0,
+        null=True,
+    )
+    title = models.ForeignKey(
+        'Title',
+        on_delete=models.CASCADE
+    )
+
+    class Meta:
+        verbose_name = 'review'
+        constraints = (
+            UniqueConstraint(fields=('author', 'title'),
+                             name='author_title_unique'),
+        )
+
+
 class Title(AddNameStrMixin):
     year = models.PositiveIntegerField()
     description = models.TextField(
@@ -73,26 +92,16 @@ class Title(AddNameStrMixin):
         Genre,
         through='GenreTitle'
     )
-    rating = models.IntegerField(
-        default=0,
-        null=True
-    )
 
     class Meta:
         verbose_name = 'title'
 
-
-class Review(DefaultFieldMixin):
-    score = models.PositiveIntegerField(
-        default=0,
-    )
-    title = models.ForeignKey(
-        Title,
-        on_delete=models.CASCADE
-    )
-
-    class Meta:
-        verbose_name = 'review'
+    @property
+    def rating(self):
+        rating = Review.objects.filter(title=self).aggregate(
+            avg_value=Avg('score')
+        )
+        return rating.get('avg_value', None)
 
 
 class Comment(DefaultFieldMixin):
