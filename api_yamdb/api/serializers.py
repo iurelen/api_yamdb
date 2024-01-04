@@ -31,9 +31,12 @@ class CategorySerializer(serializers.ModelSerializer,
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.StringRelatedField()
+
     class Meta:
-        fields = ('id', 'text', 'author', 'pub_date')
+        fields = '__all__'
         model = Comment
+        read_only_fields = ('id', 'author', 'pub_date', 'review')
 
 
 class GenreSerializer(serializers.ModelSerializer,

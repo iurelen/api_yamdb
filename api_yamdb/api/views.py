@@ -47,9 +47,35 @@ class CategoryViewSet(GenreAndCategoryModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.all()
+    queryset = Comment.objects.all().order_by('-pub_date')
     serializer_class = CommentSerializer
-    permission_classes = (AdminSuperuserChangeOrAnyReadOnly,)
+    permission_classes = (
+        (OwnerModeratorChange | AdminSuperuserChangeOrAnyReadOnly),)
+    # permission_classes = (AllowAny,)
+
+    def get_queryset(self):
+        review_id = self.kwargs.get('review_id')
+        return super().get_queryset().filter(review=review_id)
+
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        review = get_object_or_404(Review, pk=kwargs.get('review_id'))
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(review=review, author=user)
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+        return Response(
+            data=serializer.data,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    def update(self, request, *args, **kwargs):
+        if not kwargs.get('partial', False):
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)
 
 
 class GenreViewSet(GenreAndCategoryModelViewSet):
@@ -63,7 +89,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = (
         (OwnerModeratorChange | AdminSuperuserChangeOrAnyReadOnly),
     )
-    # permission_classes = (AllowAny,)
 
     def update(self, request, *args, **kwargs):
         if not kwargs.get('partial', False):
