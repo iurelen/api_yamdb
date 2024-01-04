@@ -1,3 +1,5 @@
+from django.core import validators
+
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
@@ -25,27 +27,46 @@ class TokenObtainSerializer(serializers.ModelSerializer):
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(
+        max_length=254,
+        validators=(validators.MaxLengthValidator(254),)
+    )
+    username = serializers.SlugField(
+        max_length=150,
+        validators=(
+            validators.MaxLengthValidator(150),
+            validators.RegexValidator(r'^[\w.@+-]+\Z')
+        )
+    )
 
     class Meta:
         model = CustomUser
-        fields = ('username', 'email', 'first_name', 'last_name',
-                  'bio', 'role')
+        fields = ('username', 'email',
+                  'first_name', 'last_name', 'bio', 'role'
+                  )
         validators = [
             UniqueTogetherValidator(
                 queryset=CustomUser.objects.all(),
                 fields=['username', 'email']
             )
         ]
+#        extra_kwargs = {
+#            'username': {'required': True},
+#            'email': {'required': True},
+#        }
 
-    def validate(self, data):
-        if len(str(data.get('last_name'))) > 150:
-            raise serializers.ValidationError(
-                'Должно быть менее 254 символов.')
-        return data
 
-    def validate_email(self, value):
-        if len(str(value)) > 254:
-            raise serializers.ValidationError(
-                'Должно быть менее 254 символов.'
-            )
-        return value
+#    def validate(self, data):
+#        string = str(data.get('last_name'))
+#        if len(string) > 150:
+#            raise serializers.ValidationError(
+#                'Должно быть менее 254 символов.')
+#        return data
+
+#    def validate_email(self, value):
+#        email_string = str(value)
+#        if len(email_string) > 254:
+#            raise serializers.ValidationError(
+#                'Должно быть менее 254 символов.'
+#            )
+#        return value

@@ -9,6 +9,11 @@ ROLE_CHOICE = (
 
 
 class CustomUser(AbstractUser):
+    last_name = models.CharField(
+        'Фамилия',
+        max_length=150,
+        blank=True,
+    )
     role = models.CharField(
         'Пользовательская роль',
         max_length=32,
@@ -16,7 +21,6 @@ class CustomUser(AbstractUser):
     )
     bio = models.TextField(
         'О себе',
-        blank=True,
     )
     confirmation_code = models.IntegerField('Код подтверждения', null=True)
 
