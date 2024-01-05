@@ -1,0 +1,57 @@
+
+POST http://127.0.0.1:8000/api/v1/auth/signup/
+Content-Type: application/json
+
+{
+    "username": "root_new",
+    "email": "example@yandex.ru"
+}
+
+###
+
+POST http://127.0.0.1:8000/api/v1/auth/token/
+Content-Type: application/json
+
+{
+    "username": "root_new",
+    "confirmation_code": 524571
+}
+
+###
+
+{
+  "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTcwNDUyODYxMSwiaWF0IjoxNzA0NDQyMjExLCJqdGkiOiIwYjRjYWMzMzc3MTI0ZmQ0YTAwMDc3NGZhODBmZDFiNCIsInVzZXJfaWQiOjV9.zET_tIgOJ-eI-5KyKhBDD5OAr0Pwrq7OGyFcN-xUHw8",
+  "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzA0NTI4NjExLCJpYXQiOjE3MDQ0NDIyMTEsImp0aSI6ImQ5NzE5NzNiNjk0ZDRjMmNhNTVlODI4ZTAxYmJjY2MzIiwidXNlcl9pZCI6NX0.goaa5fYUJf5L4S7tqpdwatyaJnaBvHelBDaEXsu_0_Q"
+}
+
+###
+
+POST http://127.0.0.1:8000/api/v1/users/
+Content-Type: application/json
+Authorization: Token eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzA0NTI4NjExLCJpYXQiOjE3MDQ0NDIyMTEsImp0aSI6ImQ5NzE5NzNiNjk0ZDRjMmNhNTVlODI4ZTAxYmJjY2MzIiwidXNlcl9pZCI6NX0.goaa5fYUJf5L4S7tqpdwatyaJnaBvHelBDaEXsu_0_Q
+
+{
+    "username": "test_user_new",
+    "email": "example@yandex.ru"
+}
+
+###
+
+GET http://127.0.0.1:8000/
+Content-Type: application/json
+Authorization: Token 9e521804f745d52b332ee673924d09c3f437c84e
+
+###
+
+PATCH http://127.0.0.1:8000/api/v1/posts/3/comments/5/
+Content-Type: application/json
+Authorization: Token 9e521804f745d52b332ee673924d09c3f437c84e
+
+{
+    "text": "тест 3 new"
+}
+###
+
+GET http://127.0.0.1:8000/api/v1/posts/3/comments/1/
+Content-Type: application/json
+Authorization: Token 9e521804f745d52b332ee673924d09c3f437c84e
