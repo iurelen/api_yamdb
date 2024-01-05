@@ -9,33 +9,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import CustomUser
-from .permissions import IsAdminOrSuperuser
-from .serializers import (CustomUserSerializer, TokenObtainSerializer,
+from .permissions import  AdminSuperuserChangeOrAnyReadOnly
+from .serializers import (UserSerializer, TokenObtainSerializer,
                           UserRegistrationSerializer)
 from .utils import code_generator
 
-CustomUser = get_user_model()
-
-
-class SignupTestView(APIView):
-    permission_classes = (AllowAny,)
-
-    def post(self, request):
-        code = code_generator()
-        serializer = UserRegistrationSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(confirmation_code=code, role='admin')
-            send_mail(
-                subject='Регистрация в YaMDb',
-                message=f'Код подтверждения: {code}.',
-                from_email='not_reply@yamdb.com',
-                recipient_list=[request.data.get('email')],
-                fail_silently=False,
-            )
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+User = get_user_model()
 
 class SignupView(APIView):
     permission_classes = (AllowAny,)
@@ -44,10 +23,10 @@ class SignupView(APIView):
         if 'username' not in request.data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         code = code_generator()
-        if CustomUser.objects.filter(
+        if User.objects.filter(
             username=request.data['username']
         ).exists():
-            user = CustomUser.objects.get(username=request.data['username'])
+            user = User.objects.get(username=request.data['username'])
             serializer = UserRegistrationSerializer(user, data=request.data)
         else:
             serializer = UserRegistrationSerializer(data=request.data)
@@ -70,7 +49,7 @@ class TokenObtainView(APIView):
     def post(self, request):
         if 'username' not in request.data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        user = CustomUser.objects.get(username=request.data['username'])
+        user = User.objects.get(username=request.data['username'])
         serializer = TokenObtainSerializer(
             user, data=request.data
         )
@@ -95,14 +74,11 @@ class TokenObtainView(APIView):
         )
 
 
-class CustomUserViewSet(viewsets.ModelViewSet):
-    lookup_field = 'username'
-    queryset = CustomUser.objects.all()
-    # serializer_class = UserRegistrationSerializer
-    serializer_class = CustomUserSerializer
-    # permission_classes = (IsAuthenticated,)
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all().order_by('username')
+    serializer_class = UserSerializer
     # permission_classes = (AllowAny,)
-    permission_classes = (IsAuthenticated, IsAdminOrSuperuser,)
+    permission_classes = (AdminSuperuserChangeOrAnyReadOnly,)
     pagination_class = PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
@@ -110,22 +86,13 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         'get', 'post', 'patch', 'delete', 'head', 'options', 'trace'
     ]
 
-    # def get_serializer_class(self):
-    #    if self.action == 'post':
-    #        return UserRegistrationSerializer
-    #    return CustomUserSerializer
-
-#    def perform_create(self, serializer):
-#        if 'role' not in serializer.validated_data:
-#            serializer.save(role='user')
-
     @action(
         methods=['get', 'patch'],
         detail=False,
         permission_classes=(IsAuthenticated,)
     )
     def me(self, request):
-        serializer = CustomUserSerializer(
+        serializer = UserSerializer(
             request.user, data=request.data, partial=True
         )
         if serializer.is_valid():

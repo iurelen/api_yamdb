@@ -1,11 +1,12 @@
-from rest_framework import permissions
+from rest_framework.permissions import BasePermission, SAFE_METHODS
 
-
-class IsAdminOrSuperuser(permissions.BasePermission):
+class AdminSuperuserChangeOrAnyReadOnly(BasePermission):
+    """Admin and SuperUser can edit, oteher users read only."""
 
     def has_permission(self, request, view):
         role = getattr(request.user, 'role', 'anon')
-        return role == 'admin' or request.user.is_superuser
+        return (request.method in SAFE_METHODS
+                or role == 'admin' or request.user.is_superuser)
 
     def has_object_permission(self, request, view, obj):
-        return request.user.role == 'admin' or request.user.is_superuser
+        return self.has_permission(request, view)
