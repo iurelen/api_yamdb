@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 
 from rest_framework import filters, status, viewsets
@@ -13,6 +14,27 @@ from .permissions import IsAdminOrSuperuser
 from .serializers import (CustomUserSerializer, TokenObtainSerializer,
                           UserRegistrationSerializer)
 from .utils import code_generator
+
+CustomUser = get_user_model()
+
+
+class SignupTestView(APIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        code = code_generator()
+        serializer = UserRegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(confirmation_code=code, role='admin')
+            send_mail(
+                subject='Регистрация в YaMDb',
+                message=f'Код подтверждения: {code}.',
+                from_email='not_reply@yamdb.com',
+                recipient_list=[request.data.get('email')],
+                fail_silently=False,
+            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SignupView(APIView):
@@ -76,7 +98,10 @@ class TokenObtainView(APIView):
 class CustomUserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     queryset = CustomUser.objects.all()
+    # serializer_class = UserRegistrationSerializer
     serializer_class = CustomUserSerializer
+    # permission_classes = (IsAuthenticated,)
+    # permission_classes = (AllowAny,)
     permission_classes = (IsAuthenticated, IsAdminOrSuperuser,)
     pagination_class = PageNumberPagination
     filter_backends = (filters.SearchFilter,)
@@ -84,6 +109,11 @@ class CustomUserViewSet(viewsets.ModelViewSet):
     http_method_names = [
         'get', 'post', 'patch', 'delete', 'head', 'options', 'trace'
     ]
+
+    # def get_serializer_class(self):
+    #    if self.action == 'post':
+    #        return UserRegistrationSerializer
+    #    return CustomUserSerializer
 
 #    def perform_create(self, serializer):
 #        if 'role' not in serializer.validated_data:

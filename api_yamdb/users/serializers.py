@@ -1,12 +1,21 @@
+from django.contrib.auth import get_user_model
 from django.core import validators
 
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from .models import CustomUser
+# from .models import CustomUser
+
+
+CustomUser = get_user_model()
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(
+        max_length=254,
+        validators=(validators.MaxLengthValidator(254),),
+        required=True
+    )
 
     class Meta:
         model = CustomUser
@@ -70,3 +79,10 @@ class CustomUserSerializer(serializers.ModelSerializer):
 #                'Должно быть менее 254 символов.'
 #            )
 #        return value
+
+class UserCreateSerializer(serializers.ModelSerializer):
+    role = serializers.StringRelatedField(default='user')
+
+    class Meta:
+        model = CustomUser
+        fields = ('username', 'email',)
