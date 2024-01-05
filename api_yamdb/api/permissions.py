@@ -1,28 +1,25 @@
-import sys
-
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 
-class CustomPermissions(BasePermission):
-    def has_permission(self, request, view):
-        if self._is_admin(request.user):
-            return True
-        return request.method in SAFE_METHODS or request.user.is_authenticated
+class AdminSuperuserChangeOrAnyReadOnly(BasePermission):
+    """Admin and SuperUser can edit, oteher users read only."""
 
+    def has_permission(self, request, view):
+        role = getattr(request.user, 'role', 'anon')
+        return (request.method in SAFE_METHODS
+                or role == 'admin' or request.user.is_superuser)
 
     def has_object_permission(self, request, view, obj):
-        if self._is_admin(request.user):
-            return True
-        return request.method in SAFE_METHODS or self._is_owner(request.user, obj)
+        return self.has_permission(request, view)
 
-    def _is_admin(self, user):
-        return self._get_role_or_none(user) == 'admin'
 
-    def _get_role_or_none(self, user):
-        return getattr(user, 'role', None)
+class OwnerModeratorChange(BasePermission):
+    def has_permission(self, request, view):
+        return bool(request.user.is_authenticated or
+                    request.method in SAFE_METHODS)
 
-    def _is_owner(self, user, obj):
-        return obj.author == user
-
-class TestPermissions(BasePermission):
-    pass
+    def has_object_permission(self, request, view, obj):
+        role = getattr(request.user, 'role', 'anon')
+        return bool(request.user == obj.author
+                    or role == 'moderator'
+                    or request.method in SAFE_METHODS)
