@@ -1,24 +1,17 @@
 from django.contrib.auth import get_user_model
-from django.core import validators
 
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-# from .models import CustomUser
+from .models import ROLE_CHOICE
 
-
-CustomUser = get_user_model()
+User = get_user_model()
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(
-        max_length=254,
-        validators=(validators.MaxLengthValidator(254),),
-        required=True
-    )
 
     class Meta:
-        model = CustomUser
+        model = User
         fields = ('email', 'username',)
 
     def validate(self, data):
@@ -31,58 +24,37 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 class TokenObtainSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = CustomUser
+        model = User
         fields = ('username', 'confirmation_code')
 
 
-class CustomUserSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(
-        max_length=254,
-        validators=(validators.MaxLengthValidator(254),)
-    )
-    username = serializers.SlugField(
-        max_length=150,
-        validators=(
-            validators.MaxLengthValidator(150),
-            validators.RegexValidator(r'^[\w.@+-]+\Z')
-        )
+class UserSerializer(serializers.ModelSerializer):
+    role = serializers.ChoiceField(
+        choices=ROLE_CHOICE,
+        required=False,
+        default='user'
     )
 
     class Meta:
-        model = CustomUser
-        fields = ('username', 'email',
-                  'first_name', 'last_name', 'bio', 'role'
-                  )
+        model = User
+        fields = ('username', 'email', 'role', 'first_name',
+                  'last_name', 'bio')
         validators = [
             UniqueTogetherValidator(
-                queryset=CustomUser.objects.all(),
+                queryset=User.objects.all(),
                 fields=['username', 'email']
             )
         ]
-#        extra_kwargs = {
-#            'username': {'required': True},
-#            'email': {'required': True},
-#        }
+        extra_kwargs = {
+            'password': {'write_only': True, 'required': False},
+            'bio': {'required': False}
+        }
 
 
-#    def validate(self, data):
-#        string = str(data.get('last_name'))
-#        if len(string) > 150:
-#            raise serializers.ValidationError(
-#                'Должно быть менее 254 символов.')
-#        return data
-
-#    def validate_email(self, value):
-#        email_string = str(value)
-#        if len(email_string) > 254:
-#            raise serializers.ValidationError(
-#                'Должно быть менее 254 символов.'
-#            )
-#        return value
-
-class UserCreateSerializer(serializers.ModelSerializer):
-    role = serializers.StringRelatedField(default='user')
+class MeUserSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = CustomUser
-        fields = ('username', 'email',)
+        fields = ('username', 'email', 'first_name',
+                  'last_name', 'bio', 'role')
+        model = User
+        read_only_fields = ('role',)
