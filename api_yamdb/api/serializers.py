@@ -1,17 +1,10 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
-
-
-class TitleSerializerMetaMixin:
-
-    class Meta:
-        fields = '__all__'
-        model = Title
-        read_only_fields = ('rating',)
 
 
 class ValidateSlugMixin:
@@ -21,6 +14,14 @@ class ValidateSlugMixin:
         if not value.isidentifier():
             raise serializers.ValidationError()
         return value
+
+
+class TitleSerializerMetaMixin:
+
+    class Meta:
+        fields = '__all__'
+        model = Title
+        read_only_fields = ('rating',)
 
 
 class CategorySerializer(serializers.ModelSerializer,
@@ -73,9 +74,10 @@ class TitlePostSerializer(serializers.ModelSerializer,
     )
 
     def validate_name(self, value):
-        if len(value) > 256:
+        if len(value) > settings.MAX_LENGTH_FOR_NAME:
             raise serializers.ValidationError(
-                'The name field must not exceed 256 characters.'
+                'The name field must not exceed '
+                'MAX_LENGTH_FOR_NAME characters.'
             )
         return value
 

@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, status, filters, mixins
-from rest_framework.exceptions import ParseError
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -21,6 +21,15 @@ from .serializers import (CategorySerializer,
                           TitleGetSerializer)
 
 User = get_user_model()
+
+
+class NoPatchMethodMixin:
+    """Mixin for disabling the HTTP PATCH Method."""
+
+    def update(self, request, *args, **kwargs):
+        if not kwargs.get('partial', False):
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)
 
 
 class GenreAndCategoryModelViewSet(mixins.CreateModelMixin,
@@ -46,12 +55,11 @@ class CategoryViewSet(GenreAndCategoryModelViewSet):
     serializer_class = CategorySerializer
 
 
-class CommentViewSet(viewsets.ModelViewSet):
+class CommentViewSet(NoPatchMethodMixin, viewsets.ModelViewSet):
     queryset = Comment.objects.all().order_by('-pub_date')
     serializer_class = CommentSerializer
     permission_classes = (
         (OwnerModeratorChange | AdminSuperuserChangeOrAnyReadOnly),)
-    # permission_classes = (AllowAny,)
 
     def get_queryset(self):
         review_id = self.kwargs.get('review_id')
@@ -72,28 +80,18 @@ class CommentViewSet(viewsets.ModelViewSet):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    def update(self, request, *args, **kwargs):
-        if not kwargs.get('partial', False):
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().update(request, *args, **kwargs)
-
 
 class GenreViewSet(GenreAndCategoryModelViewSet):
     queryset = Genre.objects.all().order_by('name')
     serializer_class = GenreSerializer
 
 
-class ReviewViewSet(viewsets.ModelViewSet):
+class ReviewViewSet(NoPatchMethodMixin, viewsets.ModelViewSet):
     queryset = Review.objects.all().order_by('-pub_date')
     serializer_class = ReviewSerializer
     permission_classes = (
         (OwnerModeratorChange | AdminSuperuserChangeOrAnyReadOnly),
     )
-
-    def update(self, request, *args, **kwargs):
-        if not kwargs.get('partial', False):
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().update(request, *args, **kwargs)
 
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
@@ -114,37 +112,34 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 )
             message_error = serializer.errors
         else:
-            message_error = "Already have a review from you"
+            message_error = "Already have the review from you"
         return Response(
             data=message_error,
             status=status.HTTP_400_BAD_REQUEST
         )
 
     def _check_score(self, request):
+        """Check that the score is between 1 and MAX_SCORE or None."""
         message_error = f'Invalid score value. Score must be an ' \
                         f'integer between 0 and {settings.MAX_SCORE}'
         score = request.data.get('score', None)
         try:
             if not score or int(score) in range(1, settings.MAX_SCORE + 1):
                 return score
-            raise ValueError(message_error)
+            raise ValueError
         except ValueError:
-            raise ParseError(message_error)
+            raise ValidationError(message_error)
 
 
-class TitleViewSet(viewsets.ModelViewSet):
+class TitleViewSet(NoPatchMethodMixin, viewsets.ModelViewSet):
     queryset = Title.objects.all().order_by('name')
     serializer_class = TitlePostSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     permission_classes = (AdminSuperuserChangeOrAnyReadOnly,)
 
-    def update(self, request, *args, **kwargs):
-        if not kwargs.get('partial', False):
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().update(request, *args, **kwargs)
-
     def get_serializer_class(self, *args, **kwargs):
+        """Turn serializer class for safe methods."""
         if self.request.method in SAFE_METHODS:
             return TitleGetSerializer
         return self.serializer_class

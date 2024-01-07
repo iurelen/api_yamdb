@@ -2,7 +2,7 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 
 class AdminSuperuserChangeOrAnyReadOnly(BasePermission):
-    """Admin and SuperUser can edit, oteher users read only."""
+    """Admin and SuperUser can edit, other users read only."""
 
     def has_permission(self, request, view):
         role = getattr(request.user, 'role', 'anon')

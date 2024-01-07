@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models import UniqueConstraint, Avg
@@ -8,7 +9,11 @@ User = get_user_model()
 class AddNameStrMixin(models.Model):
     """Added field name and magic method __str__."""
 
-    name = models.CharField(max_length=256)
+    name = models.CharField(
+        'Название',
+        max_length=settings.MAX_LENGTH_FOR_NAME,
+
+    )
 
     def __str__(self):
         return f'{self.name}'
@@ -21,7 +26,8 @@ class AddNameStrSlugMixin(AddNameStrMixin):
     """Added field slug."""
 
     slug = models.CharField(
-        max_length=50,
+        'Идентификатор',
+        max_length=settings.MAX_LENGTH_FOR_SLUG,
         unique=True
     )
 
@@ -35,12 +41,13 @@ class AddNameStrSlugMixin(AddNameStrMixin):
 class DefaultFieldMixin(models.Model):
     """Added fields test,author, pub_date."""
 
-    text = models.TextField()
+    text = models.TextField('Текст')
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE
     )
     pub_date = models.DateTimeField(
+        'Дата публикации',
         auto_now_add=True,
     )
 
@@ -50,17 +57,22 @@ class DefaultFieldMixin(models.Model):
 
 class Category(AddNameStrSlugMixin):
     class Meta:
-        verbose_name = 'category'
+        verbose_name = 'Категория'
+        verbose_name_plural = 'категории'
+        default_related_name = 'category'
 
 
 class Genre(AddNameStrSlugMixin):
 
     class Meta:
-        verbose_name = 'genre'
+        verbose_name = 'Жанр'
+        verbose_name_plural = 'жанры'
+        default_related_name = 'genre'
 
 
 class Review(DefaultFieldMixin):
     score = models.PositiveIntegerField(
+        'Оценка',
         default=0,
         null=True,
     )
@@ -70,16 +82,19 @@ class Review(DefaultFieldMixin):
     )
 
     class Meta:
-        verbose_name = 'review'
         constraints = (
             UniqueConstraint(fields=('author', 'title'),
                              name='author_title_unique'),
         )
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'отзывы'
+        default_related_name = 'review'
 
 
 class Title(AddNameStrMixin):
-    year = models.PositiveIntegerField()
+    year = models.PositiveIntegerField('Год выхода')
     description = models.TextField(
+        'Описание',
         blank=True,
         null=True,
     )
@@ -94,7 +109,9 @@ class Title(AddNameStrMixin):
     )
 
     class Meta:
-        verbose_name = 'title'
+        verbose_name = 'Произведение'
+        verbose_name_plural = 'произведения'
+        default_related_name = 'title'
 
     @property
     def rating(self):
@@ -111,7 +128,9 @@ class Comment(DefaultFieldMixin):
     )
 
     class Meta:
-        verbose_name = 'comments'
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'комментарии'
+        default_related_name = 'comments'
 
 
 class GenreTitle(models.Model):

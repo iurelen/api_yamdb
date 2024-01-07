@@ -26,7 +26,8 @@ class CustomUser(AbstractUser):
             )
         ]
         verbose_name = 'Пользователь'
-        verbose_name_plural = 'Пользователи'
+        verbose_name_plural = 'пользователи'
+        default_related_name = 'author'
 
     def __str__(self):
         return self.username
