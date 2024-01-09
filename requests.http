@@ -4,7 +4,7 @@ Content-Type: application/json
 
 {
     "username": "root_new",
-    "email": "example@yandex.ru"
+    "email": "user@no-admin.ru"
 }
 
 ###
@@ -13,8 +13,8 @@ POST http://127.0.0.1:8000/api/v1/auth/token/
 Content-Type: application/json
 
 {
-    "username": "root_new",
-    "confirmation_code": 524571
+    "username": "superuser",
+    "confirmation_code": 411389
 }
 
 ###
@@ -26,10 +26,11 @@ Content-Type: application/json
 
 ###
 
-POST http://127.0.0.1:8000/api/v1/users/
+GET http://127.0.0.1:8000/api/v1/users/
 Content-Type: application/json
-Authorization: Token eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzA0NTI4NjExLCJpYXQiOjE3MDQ0NDIyMTEsImp0aSI6ImQ5NzE5NzNiNjk0ZDRjMmNhNTVlODI4ZTAxYmJjY2MzIiwidXNlcl9pZCI6NX0.goaa5fYUJf5L4S7tqpdwatyaJnaBvHelBDaEXsu_0_Q
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzA0ODgwMDEzLCJpYXQiOjE3MDQ3OTM2MTMsImp0aSI6IjYxOTg2OGYyNmIwYTQ4MTdiNmYyZWEyNzJmYzI0ZWVkIiwidXNlcl9pZCI6MX0.W-cIkNGrNIz6AUYBjl0khKVHV4K4jSz3V4fFQ6e8xzE
 
+###
 {
     "username": "test_user_new",
     "email": "example@yandex.ru"
@@ -43,15 +44,21 @@ Authorization: Token 9e521804f745d52b332ee673924d09c3f437c84e
 
 ###
 
-PATCH http://127.0.0.1:8000/api/v1/posts/3/comments/5/
+GET http://127.0.0.1:8000/api/v1/users/me/
 Content-Type: application/json
-Authorization: Token 9e521804f745d52b332ee673924d09c3f437c84e
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzA0ODgwMDEzLCJpYXQiOjE3MDQ3OTM2MTMsImp0aSI6IjYxOTg2OGYyNmIwYTQ4MTdiNmYyZWEyNzJmYzI0ZWVkIiwidXNlcl9pZCI6MX0.W-cIkNGrNIz6AUYBjl0khKVHV4K4jSz3V4fFQ6e8xzE
+
+###
+
+PATCH http://127.0.0.1:8000/api/v1/users/admin-user/
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzA0ODgwMDEzLCJpYXQiOjE3MDQ3OTM2MTMsImp0aSI6IjYxOTg2OGYyNmIwYTQ4MTdiNmYyZWEyNzJmYzI0ZWVkIiwidXNlcl9pZCI6MX0.W-cIkNGrNIz6AUYBjl0khKVHV4K4jSz3V4fFQ6e8xzE
 
 {
-    "text": "тест 3 new"
+    "username": "me"
 }
 ###
 
-GET http://127.0.0.1:8000/api/v1/posts/3/comments/1/
+DELETE http://127.0.0.1:8000/api/v1/users/regular-user/
 Content-Type: application/json
-Authorization: Token 9e521804f745d52b332ee673924d09c3f437c84e
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzA0ODgwMDEzLCJpYXQiOjE3MDQ3OTM2MTMsImp0aSI6IjYxOTg2OGYyNmIwYTQ4MTdiNmYyZWEyNzJmYzI0ZWVkIiwidXNlcl9pZCI6MX0.W-cIkNGrNIz6AUYBjl0khKVHV4K4jSz3V4fFQ6e8xzE
