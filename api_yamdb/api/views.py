@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
@@ -23,10 +25,14 @@ from .serializers import (CategorySerializer,
 User = get_user_model()
 
 
-class NoPatchMethodMixin:
-    """Mixin for disabling the HTTP PATCH Method."""
+class NoPutMethodMixin:
+    """Mixin for disabling the HTTP PUT Method."""
 
     def update(self, request, *args, **kwargs):
+        logging.warning(f"""
+            perm: {self.get_permissions()[0].has_permission(request, self)}
+            obj: {self.get_permissions()[0].has_object_permission(request, self, self.get_object())}
+        """)
         if not kwargs.get('partial', False):
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
         return super().update(request, *args, **kwargs)
@@ -55,30 +61,22 @@ class CategoryViewSet(GenreAndCategoryModelViewSet):
     serializer_class = CategorySerializer
 
 
-class CommentViewSet(NoPatchMethodMixin, viewsets.ModelViewSet):
+class CommentViewSet(NoPutMethodMixin, viewsets.ModelViewSet):
     queryset = Comment.objects.all().order_by('-pub_date')
     serializer_class = CommentSerializer
-    permission_classes = (
-        (OwnerModeratorChange | AdminSuperuserChangeOrAnyReadOnly),)
+    permission_classes = (OwnerModeratorChange,)
+
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
 
     def get_queryset(self):
         review_id = self.kwargs.get('review_id')
         return super().get_queryset().filter(review=review_id)
 
-    def create(self, request, *args, **kwargs):
-        user = request.user
-        review = get_object_or_404(Review, pk=kwargs.get('review_id'))
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(review=review, author=user)
-            return Response(
-                serializer.data,
-                status=status.HTTP_201_CREATED
-            )
-        return Response(
-            data=serializer.data,
-            status=status.HTTP_400_BAD_REQUEST
-        )
+    def perform_create(self, serializer):
+        user = self.request.user
+        review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
+        serializer.save(review=review, author=user)
 
 
 class GenreViewSet(GenreAndCategoryModelViewSet):
@@ -86,36 +84,34 @@ class GenreViewSet(GenreAndCategoryModelViewSet):
     serializer_class = GenreSerializer
 
 
-class ReviewViewSet(NoPatchMethodMixin, viewsets.ModelViewSet):
+class ReviewViewSet(NoPutMethodMixin, viewsets.ModelViewSet):
     queryset = Review.objects.all().order_by('-pub_date')
     serializer_class = ReviewSerializer
-    permission_classes = (
-        (OwnerModeratorChange | AdminSuperuserChangeOrAnyReadOnly),
-    )
+    permission_classes = (OwnerModeratorChange,)
 
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
         return super().get_queryset().filter(title=title_id)
 
     def create(self, request, *args, **kwargs):
-        score = self._check_score(request)
         user = request.user
-        title = get_object_or_404(Title, pk=kwargs.get('title_id'))
-
-        if not self.get_queryset().filter(title=title, author=user).exists():
-            serializer = self.get_serializer(data=request.data)
-            if serializer.is_valid():
-                serializer.save(title=title, author=user, score=score)
-                return Response(
-                    serializer.data,
-                    status=status.HTTP_201_CREATED
-                )
-            message_error = serializer.errors
-        else:
-            message_error = "Already have the review from you"
-        return Response(
-            data=message_error,
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        if self.get_queryset().filter(title=title, author=user).exists():
+            return Response(
+            data="Already have the review from you",
             status=status.HTTP_400_BAD_REQUEST
+        )
+        serializer = self.get_serializer(data=request.data)
+        score = self._check_score(request)
+        if serializer.is_valid():
+            serializer.save(title=title, author=user, score=score)
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED
+                )
+        return Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
         )
 
     def _check_score(self, request):
@@ -131,7 +127,7 @@ class ReviewViewSet(NoPatchMethodMixin, viewsets.ModelViewSet):
             raise ValidationError(message_error)
 
 
-class TitleViewSet(NoPatchMethodMixin, viewsets.ModelViewSet):
+class TitleViewSet(NoPutMethodMixin, viewsets.ModelViewSet):
     queryset = Title.objects.all().order_by('name')
     serializer_class = TitlePostSerializer
     filter_backends = (DjangoFilterBackend,)
