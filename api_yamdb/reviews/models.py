@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.db.models import UniqueConstraint, Avg
+from django.db.models import UniqueConstraint
 
 User = get_user_model()
 
@@ -35,7 +35,7 @@ class AddNameStrSlugMixin(AddNameStrMixin):
         abstract = True
 
     def __str__(self):
-        return f'{self.slug}'
+        return f'{self.name}'
 
 
 class DefaultFieldMixin(models.Model):
@@ -44,7 +44,8 @@ class DefaultFieldMixin(models.Model):
     text = models.TextField('Текст')
     author = models.ForeignKey(
         User,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        verbose_name='Автор',
     )
     pub_date = models.DateTimeField(
         'Дата публикации',
@@ -53,6 +54,9 @@ class DefaultFieldMixin(models.Model):
 
     class Meta:
         abstract = True
+
+    def __str__(self):
+        return self.text
 
 
 class Category(AddNameStrSlugMixin):
@@ -101,7 +105,8 @@ class Title(AddNameStrMixin):
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
-        null=True
+        null=True,
+        verbose_name='категории'
     )
     genre = models.ManyToManyField(
         Genre,
@@ -135,3 +140,11 @@ class GenreTitle(models.Model):
         Title,
         on_delete=models.CASCADE
     )
+
+    class Meta:
+        verbose_name = 'Жанр'
+        verbose_name_plural = 'жанры'
+        default_related_name = 'genretitle'
+
+    def __str__(self):
+        return self.genre.name
