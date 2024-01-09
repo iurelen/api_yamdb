@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
@@ -57,7 +59,15 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = '__all__'
         model = Review
         read_only_fields = ('id', 'author', 'pub_date', 'title')
+        
+        
+    def create(self, validated_data):
+        author = validated_data.get('author')
+        title = validated_data.get('title')
+        if Review.objects.filter(title=title, author=author).exists():
+            raise serializers.ValidationError('Already have the review from you')
 
+        return super().create(validated_data)
 
 class TitlePostSerializer(serializers.ModelSerializer,
                           TitleSerializerMetaMixin):

@@ -2,6 +2,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, status, filters, mixins
@@ -57,12 +58,12 @@ class GenreAndCategoryModelViewSet(mixins.CreateModelMixin,
 
 
 class CategoryViewSet(GenreAndCategoryModelViewSet):
-    queryset = Category.objects.all().order_by('name')
+    queryset = Category.objects.order_by('name')
     serializer_class = CategorySerializer
 
 
 class CommentViewSet(NoPutMethodMixin, viewsets.ModelViewSet):
-    queryset = Comment.objects.all().order_by('-pub_date')
+    queryset = Comment.objects.order_by('-pub_date')
     serializer_class = CommentSerializer
     permission_classes = (OwnerModeratorChange,)
 
@@ -80,12 +81,12 @@ class CommentViewSet(NoPutMethodMixin, viewsets.ModelViewSet):
 
 
 class GenreViewSet(GenreAndCategoryModelViewSet):
-    queryset = Genre.objects.all().order_by('name')
+    queryset = Genre.objects.order_by('name')
     serializer_class = GenreSerializer
 
 
 class ReviewViewSet(NoPutMethodMixin, viewsets.ModelViewSet):
-    queryset = Review.objects.all().order_by('-pub_date')
+    queryset = Review.objects.order_by('-pub_date')
     serializer_class = ReviewSerializer
     permission_classes = (OwnerModeratorChange,)
 
@@ -93,31 +94,16 @@ class ReviewViewSet(NoPutMethodMixin, viewsets.ModelViewSet):
         title_id = self.kwargs.get('title_id')
         return super().get_queryset().filter(title=title_id)
 
-    def create(self, request, *args, **kwargs):
-        user = request.user
+    def perform_create(self, serializer):
+        user = self.request.user
+        score = self._check_score(self.request)
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
-        if self.get_queryset().filter(title=title, author=user).exists():
-            return Response(
-            data="Already have the review from you",
-            status=status.HTTP_400_BAD_REQUEST
-        )
-        serializer = self.get_serializer(data=request.data)
-        score = self._check_score(request)
-        if serializer.is_valid():
-            serializer.save(title=title, author=user, score=score)
-            return Response(
-                serializer.data,
-                status=status.HTTP_201_CREATED
-                )
-        return Response(
-                data=serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-        )
+        serializer.save(title=title, author=user, score=score)
 
     def _check_score(self, request):
         """Check that the score is between 1 and MAX_SCORE or None."""
-        message_error = f'Invalid score value. Score must be an ' \
-                        f'integer between 0 and {settings.MAX_SCORE}'
+        message_error = (f'Invalid score value. Score must be an '
+                         f'integer between 0 and {settings.MAX_SCORE}')
         score = request.data.get('score', None)
         try:
             if not score or int(score) in range(1, settings.MAX_SCORE + 1):
@@ -128,7 +114,7 @@ class ReviewViewSet(NoPutMethodMixin, viewsets.ModelViewSet):
 
 
 class TitleViewSet(NoPutMethodMixin, viewsets.ModelViewSet):
-    queryset = Title.objects.all().order_by('name')
+    queryset = Title.objects.order_by('name')
     serializer_class = TitlePostSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
@@ -139,3 +125,9 @@ class TitleViewSet(NoPutMethodMixin, viewsets.ModelViewSet):
         if self.request.method in SAFE_METHODS:
             return TitleGetSerializer
         return self.serializer_class
+
+    def get_queryset(self):
+        queryset = Title.objects.order_by('name').annotate(
+            rating=Avg('review__score')
+        )
+        return queryset

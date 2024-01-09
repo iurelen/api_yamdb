@@ -113,13 +113,6 @@ class Title(AddNameStrMixin):
         verbose_name_plural = 'произведения'
         default_related_name = 'title'
 
-    @property
-    def rating(self):
-        rating = Review.objects.filter(title=self).aggregate(
-            avg_value=Avg('score')
-        )
-        return rating.get('avg_value', None)
-
 
 class Comment(DefaultFieldMixin):
     review = models.ForeignKey(
