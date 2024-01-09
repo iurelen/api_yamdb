@@ -30,10 +30,6 @@ class NoPutMethodMixin:
     """Mixin for disabling the HTTP PUT Method."""
 
     def update(self, request, *args, **kwargs):
-        logging.warning(f"""
-            perm: {self.get_permissions()[0].has_permission(request, self)}
-            obj: {self.get_permissions()[0].has_object_permission(request, self, self.get_object())}
-        """)
         if not kwargs.get('partial', False):
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
         return super().update(request, *args, **kwargs)
@@ -63,7 +59,6 @@ class CategoryViewSet(GenreAndCategoryModelViewSet):
 
 
 class CommentViewSet(NoPutMethodMixin, viewsets.ModelViewSet):
-    queryset = Comment.objects.order_by('-pub_date')
     serializer_class = CommentSerializer
     permission_classes = (OwnerModeratorChange,)
 
@@ -72,7 +67,7 @@ class CommentViewSet(NoPutMethodMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         review_id = self.kwargs.get('review_id')
-        return super().get_queryset().filter(review=review_id)
+        return Comment.objects.filter(review=review_id).order_by('-pub_date')
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -86,13 +81,12 @@ class GenreViewSet(GenreAndCategoryModelViewSet):
 
 
 class ReviewViewSet(NoPutMethodMixin, viewsets.ModelViewSet):
-    queryset = Review.objects.order_by('-pub_date')
     serializer_class = ReviewSerializer
     permission_classes = (OwnerModeratorChange,)
 
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
-        return super().get_queryset().filter(title=title_id)
+        return Review.objects.filter(title=title_id).order_by('-pub_date')
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -114,7 +108,6 @@ class ReviewViewSet(NoPutMethodMixin, viewsets.ModelViewSet):
 
 
 class TitleViewSet(NoPutMethodMixin, viewsets.ModelViewSet):
-    queryset = Title.objects.order_by('name')
     serializer_class = TitlePostSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
