@@ -128,6 +128,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 
 EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 
+DEFAULT_FROM_EMAIL = 'not_reply@yamdb.com'
+
 MAX_SCORE = 10
 
 MAX_LENGTH_FOR_NAME = 256
