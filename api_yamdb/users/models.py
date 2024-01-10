@@ -23,6 +23,7 @@ class CustomUser(AbstractUser):
         constraints = [
             models.UniqueConstraint(
                 fields=('username', 'email',),
+                fields=('username', 'email',),
                 name='unique_pair_username_email'
             )
         ]
@@ -36,3 +37,7 @@ class CustomUser(AbstractUser):
     @property
     def is_moderator(self):
         return self.role == self.Role.MODERATOR
+
+    @property
+    def is_admin(self):
+        return self.role == self.Role.ADMIN
