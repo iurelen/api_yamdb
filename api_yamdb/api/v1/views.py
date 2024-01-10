@@ -60,16 +60,16 @@ class CommentViewSet(NoPutMethodMixin, viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (OwnerModeratorChange,)
 
-    def create(self, request, *args, **kwargs):
-        return super().create(request, *args, **kwargs)
-
     def get_queryset(self):
         review_id = self.kwargs.get('review_id')
         return Comment.objects.filter(review=review_id).order_by('-pub_date')
 
     def perform_create(self, serializer):
         user = self.request.user
-        review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        review = get_object_or_404(
+            Review, pk=self.kwargs.get('review_id'), title=title
+        )
         serializer.save(review=review, author=user)
 
 
@@ -94,7 +94,7 @@ class ReviewViewSet(NoPutMethodMixin, viewsets.ModelViewSet):
 
     def _check_score(self, request):
         """Check that the score is between 1 and MAX_SCORE or None."""
-        message_error = (f'Invalid score value. Score must be an '
+        message_error = ('Invalid score value. Score must be an '
                          f'integer between 0 and {settings.MAX_SCORE}')
         score = request.data.get('score', None)
         try:

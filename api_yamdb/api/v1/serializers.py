@@ -1,19 +1,9 @@
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
-
-
-class ValidateSlugMixin:
-    """Slug validation mixin."""
-
-    def validate_slug(self, value):
-        if not value.isidentifier():
-            raise serializers.ValidationError()
-        return value
 
 
 class TitleSerializerMetaMixin:
@@ -24,8 +14,7 @@ class TitleSerializerMetaMixin:
         read_only_fields = ('rating',)
 
 
-class CategorySerializer(serializers.ModelSerializer,
-                         ValidateSlugMixin):
+class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('name', 'slug')
         model = Category
@@ -40,8 +29,7 @@ class CommentSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'author', 'pub_date', 'review')
 
 
-class GenreSerializer(serializers.ModelSerializer,
-                      ValidateSlugMixin):
+class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('name', 'slug')
         model = Genre
@@ -81,14 +69,6 @@ class TitlePostSerializer(serializers.ModelSerializer,
         queryset=Category.objects.all(),
         slug_field='slug'
     )
-
-    def validate_name(self, value):
-        if len(value) > settings.MAX_LENGTH_FOR_NAME:
-            raise serializers.ValidationError(
-                'The name field must not exceed '
-                'MAX_LENGTH_FOR_NAME characters.'
-            )
-        return value
 
 
 class TitleGetSerializer(serializers.ModelSerializer,

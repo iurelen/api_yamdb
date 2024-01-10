@@ -11,15 +11,15 @@ class AdminSuperuserChangeOrAnyReadOnly(BasePermission):
                 or request.method in SAFE_METHODS)
 
 
-class OwnerModeratorChange(AdminSuperuserChangeOrAnyReadOnly):
+class OwnerModeratorChange(BasePermission):
     def has_permission(self, request, view):
-        return (super().has_permission(request, view)
-                or request.user.is_authenticated
-                or request.method in SAFE_METHODS)
+        return (
+            request.user.is_authenticated
+            or request.method in SAFE_METHODS)
 
     def has_object_permission(self, request, view, obj):
         user = request.user
-        return (super().has_permission(request, view)
-                or request.method in SAFE_METHODS
-                or user == obj.author
-                or user.is_moderator)
+        return (
+            request.method in SAFE_METHODS
+            or user == obj.author
+            or user.is_moderator or user.is_admin)
