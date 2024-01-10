@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from rest_framework import serializers
 
 from reviews.models import Category, Comment, Genre, Review, Title
@@ -69,6 +70,14 @@ class TitlePostSerializer(serializers.ModelSerializer,
         queryset=Category.objects.all(),
         slug_field='slug'
     )
+
+    def validate_year(self, value):
+        current_year = timezone.now().year
+
+        if value > current_year:
+            raise serializers.ValidationError("Год не может быть больше текущего года.")
+
+        return value
 
 
 class TitleGetSerializer(serializers.ModelSerializer,
