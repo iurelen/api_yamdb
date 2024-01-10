@@ -1,4 +1,7 @@
+from django.urls import path
 from rest_framework.routers import DefaultRouter
+
+from users.views import SignupView, UserViewSet, TokenObtainView
 
 from .views import (
     CategoryViewSet,
@@ -20,3 +23,9 @@ router_v1.register(
     CommentViewSet, basename='comments'
 )
 router_v1.register('titles', TitleViewSet, basename='titles')
+router_v1.register('users', UserViewSet, basename='users')
+
+auth_urls = [
+    path('signup/', SignupView.as_view(), name='signup'),
+    path('token/', TokenObtainView.as_view(), name='token_obtain'),
+]

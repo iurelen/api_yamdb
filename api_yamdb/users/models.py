@@ -23,7 +23,6 @@ class CustomUser(AbstractUser):
         constraints = [
             models.UniqueConstraint(
                 fields=('username', 'email',),
-                fields=('username', 'email',),
                 name='unique_pair_username_email'
             )
         ]

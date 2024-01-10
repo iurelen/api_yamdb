@@ -25,7 +25,7 @@ class AddNameStrMixin(models.Model):
 class AddNameStrSlugMixin(AddNameStrMixin):
     """Added field slug."""
 
-    slug = models.CharField(
+    slug = models.SlugField(
         'Идентификатор',
         max_length=settings.MAX_LENGTH_FOR_SLUG,
         unique=True
@@ -60,6 +60,7 @@ class DefaultFieldMixin(models.Model):
 
 
 class Category(AddNameStrSlugMixin):
+
     class Meta:
         verbose_name = 'Категория'
         verbose_name_plural = 'категории'
@@ -77,8 +78,7 @@ class Genre(AddNameStrSlugMixin):
 class Review(DefaultFieldMixin):
     score = models.PositiveIntegerField(
         'Оценка',
-        default=0,
-        null=True,
+        default=1
     )
     title = models.ForeignKey(
         'Title',
@@ -96,7 +96,7 @@ class Review(DefaultFieldMixin):
 
 
 class Title(AddNameStrMixin):
-    year = models.PositiveIntegerField('Год выхода')
+    year = models.IntegerField('Год выхода')
     description = models.TextField(
         'Описание',
         blank=True,
