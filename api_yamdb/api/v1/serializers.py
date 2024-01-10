@@ -75,7 +75,9 @@ class TitlePostSerializer(serializers.ModelSerializer,
         current_year = timezone.now().year
 
         if value > current_year:
-            raise serializers.ValidationError("Год не может быть больше текущего года.")
+            raise serializers.ValidationError(
+                'Год не может быть больше текущего года.'
+            )
 
         return value
 
