@@ -35,8 +35,10 @@ class CustomUser(AbstractUser):
 
     @property
     def is_moderator(self):
-        return self.role == self.Role.MODERATOR
+        """Every admin is moderator."""
+        return self.role == self.Role.MODERATOR or self.is_admin
 
     @property
     def is_admin(self):
-        return self.role == self.Role.ADMIN
+        """ Every superuser is admin."""
+        return self.role == self.Role.ADMIN or self.is_superuser
