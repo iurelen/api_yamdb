@@ -40,5 +40,5 @@ class CustomUser(AbstractUser):
 
     @property
     def is_admin(self):
-        """ Every superuser is admin."""
+        """Every superuser is admin."""
         return self.role == self.Role.ADMIN or self.is_superuser

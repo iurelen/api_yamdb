@@ -3,6 +3,7 @@ from django.db.models import Avg
 
 from .models import Category, Genre, Review, Title, Comment, GenreTitle
 
+
 @admin.register(Category, Genre)
 class CategoryGenreAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug')
@@ -11,6 +12,7 @@ class CategoryGenreAdmin(admin.ModelAdmin):
 class GenreInline(admin.TabularInline):
     model = GenreTitle
     extra = 1
+
 
 @admin.register(Title)
 class TitleAdmin(admin.ModelAdmin):
@@ -36,9 +38,11 @@ class TitleAdmin(admin.ModelAdmin):
             rating = "{:.2f}".format(rating)
         return rating
 
+
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
     list_display = ('text', 'author', 'pub_date')
+
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
