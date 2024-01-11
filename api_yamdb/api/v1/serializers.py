@@ -1,3 +1,6 @@
+import logging
+
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework import serializers
@@ -55,6 +58,16 @@ class ReviewSerializer(serializers.ModelSerializer):
                 'Already have the review from you')
 
         return super().create(validated_data)
+
+    def validate_score(self, value):
+        """Check that the score is between 1 and MAX_SCORE or None."""
+        logging.error(value)
+        if 1 < value < settings.MAX_SCORE + 1:
+            return value
+        raise serializers.ValidationError(
+            'Invalid score value. Score must be an '
+            f'integer between 0 and {settings.MAX_SCORE}'
+        )
 
 
 class TitlePostSerializer(serializers.ModelSerializer,
