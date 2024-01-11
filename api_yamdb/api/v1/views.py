@@ -1,5 +1,3 @@
-import logging
-
 from django.contrib.auth import get_user_model
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
@@ -89,7 +87,6 @@ class ReviewViewSet(NoPutMethodMixin, viewsets.ModelViewSet):
     def perform_create(self, serializer):
         user = self.request.user
         score = self.request.data.get('score', None)
-        logging.warning(score)
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
         serializer.save(title=title, author=user, score=score)
 
