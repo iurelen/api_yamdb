@@ -1,10 +1,8 @@
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, status, filters, mixins
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -88,21 +86,9 @@ class ReviewViewSet(NoPutMethodMixin, viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         user = self.request.user
-        score = self._check_score(self.request)
+        score = self.request.data.get('score', None)
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
         serializer.save(title=title, author=user, score=score)
-
-    def _check_score(self, request):
-        """Check that the score is between 1 and MAX_SCORE or None."""
-        message_error = ('Invalid score value. Score must be an '
-                         f'integer between 0 and {settings.MAX_SCORE}')
-        score = request.data.get('score', None)
-        try:
-            if not score or int(score) in range(1, settings.MAX_SCORE + 1):
-                return score
-            raise ValueError
-        except ValueError:
-            raise ValidationError(message_error)
 
 
 class TitleViewSet(NoPutMethodMixin, viewsets.ModelViewSet):

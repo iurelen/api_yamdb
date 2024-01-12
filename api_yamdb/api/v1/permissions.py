@@ -6,9 +6,8 @@ class AdminSuperuserChangeOrAnyReadOnly(BasePermission):
 
     def has_permission(self, request, view):
         user = request.user
-        is_admin = getattr(user, 'is_admin', False)
-        return (is_admin or user.is_superuser
-                or request.method in SAFE_METHODS)
+        return (request.method in SAFE_METHODS
+                or (user.is_authenticated and user.is_admin))
 
 
 class OwnerModeratorChange(BasePermission):
@@ -21,5 +20,4 @@ class OwnerModeratorChange(BasePermission):
         user = request.user
         return (
             request.method in SAFE_METHODS
-            or user == obj.author
-            or user.is_moderator or user.is_admin)
+            or user == obj.author or user.is_moderator)

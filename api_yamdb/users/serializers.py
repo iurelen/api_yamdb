@@ -6,17 +6,21 @@ from rest_framework.validators import UniqueTogetherValidator
 User = get_user_model()
 
 
-class UserRegistrationSerializer(serializers.ModelSerializer):
+class ValidateUserNameMixin:
+
+    def validate_username(self, value):
+        if value == 'me':
+            raise serializers.ValidationError(
+                'Некорректное имя пользователя.')
+        return value
+
+
+class UserRegistrationSerializer(ValidateUserNameMixin,
+                                 serializers.ModelSerializer):
 
     class Meta:
         model = User
         fields = ('email', 'username',)
-
-    def validate(self, data):
-        if data.get('username') == 'me':
-            raise serializers.ValidationError(
-                'Некорректное имя пользователя.')
-        return data
 
 
 class TokenObtainSerializer(serializers.ModelSerializer):
@@ -26,7 +30,8 @@ class TokenObtainSerializer(serializers.ModelSerializer):
         fields = ('username', 'confirmation_code')
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(ValidateUserNameMixin,
+                     serializers.ModelSerializer):
 
     class Meta:
         model = User
@@ -43,23 +48,12 @@ class UserSerializer(serializers.ModelSerializer):
             'bio': {'required': False}
         }
 
-    def validate(self, data):
-        if data.get('username') == 'me':
-            raise serializers.ValidationError(
-                'Некорректное имя пользователя.')
-        return data
 
-
-class MeUserSerializer(serializers.ModelSerializer):
+class MeUserSerializer(ValidateUserNameMixin,
+                       serializers.ModelSerializer):
 
     class Meta:
         fields = ('username', 'email', 'first_name',
                   'last_name', 'bio', 'role')
         model = User
         read_only_fields = ('role',)
-
-    def validate(self, data):
-        if data.get('username') == 'me':
-            raise serializers.ValidationError(
-                'Некорректное имя пользователя.')
-        return data
