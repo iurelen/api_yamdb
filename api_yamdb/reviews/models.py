@@ -42,11 +42,6 @@ class DefaultFieldMixin(models.Model):
     """Added fields test,author, pub_date."""
 
     text = models.TextField('Текст')
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        verbose_name='Автор',
-    )
     pub_date = models.DateTimeField(
         'Дата публикации',
         auto_now_add=True,
@@ -76,6 +71,12 @@ class Genre(AddNameStrSlugMixin):
 
 
 class Review(DefaultFieldMixin):
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Автор',
+        related_name='reviews'
+    )
     score = models.PositiveIntegerField(
         'Оценка',
         default=1
@@ -99,14 +100,13 @@ class Title(AddNameStrMixin):
     year = models.IntegerField('Год выхода')
     description = models.TextField(
         'Описание',
-        blank=True,
-        null=True,
+        blank=True
     )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
         null=True,
-        verbose_name='категории'
+        verbose_name='категория'
     )
     genre = models.ManyToManyField(
         Genre,
@@ -123,6 +123,13 @@ class Comment(DefaultFieldMixin):
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
+        related_name='comments'
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Автор',
+        related_name='comments'
     )
 
     class Meta:
@@ -138,7 +145,8 @@ class GenreTitle(models.Model):
     )
     title = models.ForeignKey(
         Title,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name='genres'
     )
 
     class Meta:

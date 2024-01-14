@@ -1,9 +1,10 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db.models import Avg
 from django.utils import timezone
 from rest_framework import serializers
 
-from reviews.models import Category, Comment, Genre, Review, Title
+from reviews.models import Category, Comment, Genre, GenreTitle, Review, Title
 
 User = get_user_model()
 
@@ -26,9 +27,9 @@ class CommentSerializer(serializers.ModelSerializer):
     author = serializers.StringRelatedField()
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'text', 'author', 'pub_date')
         model = Comment
-        read_only_fields = ('id', 'author', 'pub_date', 'review')
+        read_only_fields = ('id', 'author', 'pub_date')
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -39,14 +40,12 @@ class GenreSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.StringRelatedField()
-    score = serializers.IntegerField(
-        required=False
-    )
+    score = serializers.IntegerField(required=True)
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
         model = Review
-        read_only_fields = ('id', 'author', 'pub_date', 'title')
+        read_only_fields = ('id', 'author', 'pub_date')
 
     def create(self, validated_data):
         author = validated_data.get('author')
@@ -59,7 +58,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def validate_score(self, value):
         """Check that the score is between 1 and MAX_SCORE or None."""
-        if 1 < value < settings.MAX_SCORE + 1:
+        if 0 < value < settings.MAX_SCORE + 1:
             return value
         raise serializers.ValidationError(
             'Invalid score value. Score must be an '
@@ -67,16 +66,28 @@ class ReviewSerializer(serializers.ModelSerializer):
         )
 
 
+class GenreListingField(serializers.SlugRelatedField):
+    def to_representation(self, value):
+        serializer = GenreSerializer(value)
+        return serializer.data
+
+
+class CategoryListingField(serializers.SlugRelatedField):
+    def to_representation(self, value):
+        serializer = CategorySerializer(value)
+        return serializer.data
+
+
 class TitlePostSerializer(serializers.ModelSerializer,
                           TitleSerializerMetaMixin):
     """TitleSerializer for NO Safe methods."""
 
-    genre = serializers.SlugRelatedField(
+    genre = GenreListingField(
         queryset=Genre.objects.all(),
         many=True,
         slug_field='slug'
     )
-    category = serializers.SlugRelatedField(
+    category = CategoryListingField(
         queryset=Category.objects.all(),
         slug_field='slug'
     )
@@ -90,6 +101,27 @@ class TitlePostSerializer(serializers.ModelSerializer,
             )
 
         return value
+
+    def create(self, validated_data):
+        genres = validated_data.pop('genre')
+        title = Title.objects.create(**validated_data)
+
+        for genre in genres:
+            genre_data, status = Genre.objects.get_or_create(
+                name=genre)
+            GenreTitle.objects.create(
+                title=title,
+                genre=genre_data
+            )
+        return title
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        title = Title.objects.filter(id=instance.id).annotate(
+            rating=Avg('review__score'))
+        representation['rating'] = title.first().rating
+
+        return representation
 
 
 class TitleGetSerializer(serializers.ModelSerializer,

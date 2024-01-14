@@ -9,7 +9,8 @@ class CustomUser(AbstractUser):
         ADMIN = 'admin', 'Администратор'
 
     email = models.EmailField('Почта', unique=True, max_length=254)
-    username = models.SlugField('Логин', unique=True, max_length=150)
+    username = models.SlugField('Логин', unique=True, max_length=150,
+                                allow_unicode=False)
     role = models.CharField(
         'Пользовательская роль',
         max_length=32,
@@ -35,10 +36,8 @@ class CustomUser(AbstractUser):
 
     @property
     def is_moderator(self):
-        """Every admin is moderator."""
-        return self.role == self.Role.MODERATOR or self.is_admin
+        return self.role == self.Role.MODERATOR
 
     @property
     def is_admin(self):
-        """Every superuser is admin."""
-        return self.role == self.Role.ADMIN or self.is_superuser
+        return self.role == self.Role.ADMIN

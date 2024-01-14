@@ -7,7 +7,7 @@ from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from reviews.models import Category, Comment, Genre, Review, Title
+from reviews.models import Category, Genre, Review, Title
 
 from .filters import TitleFilter
 from .permissions import (AdminSuperuserChangeOrAnyReadOnly,
@@ -59,16 +59,20 @@ class CommentViewSet(NoPutMethodMixin, viewsets.ModelViewSet):
     permission_classes = (OwnerModeratorChange,)
 
     def get_queryset(self):
-        review_id = self.kwargs.get('review_id')
-        return Comment.objects.filter(review=review_id).order_by('-pub_date')
+        review = get_object_or_404(
+            Review,
+            pk=self.kwargs.get('review_id'),
+            title_id=self.kwargs.get('title_id')
+        )
+        return review.comments.order_by('-pub_date')
 
     def perform_create(self, serializer):
-        user = self.request.user
-        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
         review = get_object_or_404(
-            Review, pk=self.kwargs.get('review_id'), title=title
+            Review,
+            pk=self.kwargs.get('review_id'),
+            title_id=self.kwargs.get('title_id')
         )
-        serializer.save(review=review, author=user)
+        serializer.save(review=review, author=self.request.user)
 
 
 class GenreViewSet(GenreAndCategoryModelViewSet):
@@ -86,7 +90,7 @@ class ReviewViewSet(NoPutMethodMixin, viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         user = self.request.user
-        score = self.request.data.get('score', None)
+        score = self.request.data.get('score')
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
         serializer.save(title=title, author=user, score=score)
 

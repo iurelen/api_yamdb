@@ -44,7 +44,7 @@ class UserSerializer(ValidateUserNameMixin,
             )
         ]
         extra_kwargs = {
-            'password': {'write_only': True, 'required': False},
+            'password': {'required': False},
             'bio': {'required': False}
         }
 

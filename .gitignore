@@ -145,6 +145,8 @@ dmypy.json
 
 .mypy_cache
 
+requests.http
+
 # папки со статикой и медиа
 media/
 
