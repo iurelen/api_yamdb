@@ -55,7 +55,7 @@ python manage.py migrate
 # Запустите сервер
 python manage.py runserver
 ```
-## Импорт данных из cvs в БД
+## Импорт данных из file.csv в БД
 
 ```bash
 # Команда import_csv принимает 1 позиционный аргумент.
