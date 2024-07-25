@@ -9,8 +9,7 @@ class CustomUser(AbstractUser):
         ADMIN = 'admin', 'Администратор'
 
     email = models.EmailField('Почта', unique=True, max_length=254)
-    username = models.SlugField('Логин', unique=True, max_length=150,
-                                allow_unicode=False)
+    username = models.SlugField('Логин', unique=True, max_length=150)
     role = models.CharField(
         'Пользовательская роль',
         max_length=32,

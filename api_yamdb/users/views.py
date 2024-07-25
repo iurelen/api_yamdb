@@ -57,7 +57,7 @@ class TokenObtainView(APIView):
         serializer.is_valid(raise_exception=True)
         confirmation_code = serializer.validated_data.get(
             'confirmation_code')
-        if confirmation_code != user.confirmation_code:
+        if int(confirmation_code) != user.confirmation_code:
             return Response(
                 {
                     'error': 'Некорректный код подтверждения.',
